@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
 import { Medicine } from "@/types/medicine";
@@ -7,6 +6,7 @@ import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 import { MessageSquare } from "lucide-react";
+import { useAutomaticNotifications } from "@/hooks/useAutomaticNotifications";
 
 type MedicineWithNotification = {
   medicineId: string;
@@ -24,6 +24,8 @@ type MedicineWithNotification = {
 
 const Alarms = () => {
   const [notifications, setNotifications] = useState<MedicineWithNotification[]>([]);
+  
+  useAutomaticNotifications();
 
   useEffect(() => {
     loadNotifications();
@@ -92,6 +94,9 @@ const Alarms = () => {
         }));
         
         toast.success(`WhatsApp notifications ${enabled ? 'enabled' : 'disabled'}`);
+        if (enabled) {
+          toast.info("You will receive WhatsApp messages automatically at the scheduled times");
+        }
       }
     } catch (error) {
       console.error("Error updating notification:", error);
@@ -118,44 +123,51 @@ const Alarms = () => {
   };
 
   return (
-    <PageLayout title="Medicine Notifications">
+    <PageLayout title="WhatsApp Notifications">
       <div className="space-y-6">
         {notifications.length === 0 ? (
           <div className="text-center py-10 bg-gray-50 rounded-lg">
             <p className="text-gray-500">No notifications set</p>
           </div>
         ) : (
-          <div className="space-y-4">
-            {notifications.map((item) => (
-              <div 
-                key={`${item.medicineId}-${item.alarm.id}`}
-                className="p-4 bg-white rounded-lg shadow-sm border flex items-center justify-between"
-              >
-                <div>
-                  <div className="text-lg font-medium">{formatTime(item.alarm.time)}</div>
-                  <div className="text-base">{item.medicineName}</div>
-                  <div className="text-sm text-gray-500">{item.dosage}</div>
-                  <div className="text-xs text-gray-400">{getSchedule(item)}</div>
+          <>
+            <div className="bg-blue-50 p-4 rounded-lg mb-4">
+              <p className="text-sm text-blue-600">
+                WhatsApp messages will be sent automatically at the scheduled times when notifications are enabled.
+              </p>
+            </div>
+            <div className="space-y-4">
+              {notifications.map((item) => (
+                <div 
+                  key={`${item.medicineId}-${item.alarm.id}`}
+                  className="p-4 bg-white rounded-lg shadow-sm border flex items-center justify-between"
+                >
+                  <div>
+                    <div className="text-lg font-medium">{formatTime(item.alarm.time)}</div>
+                    <div className="text-base">{item.medicineName}</div>
+                    <div className="text-sm text-gray-500">{item.dosage}</div>
+                    <div className="text-xs text-gray-400">{getSchedule(item)}</div>
+                  </div>
+                  <div className="flex items-center gap-4">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => sendWhatsAppMessage(item)}
+                      className="text-green-500 hover:text-green-600 hover:bg-green-50"
+                    >
+                      <MessageSquare className="h-5 w-5" />
+                    </Button>
+                    <Switch 
+                      checked={item.alarm.enabled}
+                      onCheckedChange={(checked) => 
+                        toggleNotificationStatus(item.medicineId, item.alarm.id, checked)
+                      }
+                    />
+                  </div>
                 </div>
-                <div className="flex items-center gap-4">
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => sendWhatsAppMessage(item)}
-                    className="text-green-500 hover:text-green-600 hover:bg-green-50"
-                  >
-                    <MessageSquare className="h-5 w-5" />
-                  </Button>
-                  <Switch 
-                    checked={item.alarm.enabled}
-                    onCheckedChange={(checked) => 
-                      toggleNotificationStatus(item.medicineId, item.alarm.id, checked)
-                    }
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
+          </>
         )}
       </div>
     </PageLayout>
