@@ -52,6 +52,22 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// MediBuddy colors
+				mediBuddy: {
+					blue: '#4A89DC',
+					lightBlue: '#D3E4FD',
+					green: '#37BC9B',
+					lightGreen: '#F2FCE2',
+					red: '#DA4453',
+					orange: '#E9573F',
+					lightOrange: '#FEC6A1',
+					yellow: '#F6BB42',
+					lightYellow: '#FEF7CD',
+					purple: '#967ADC',
+					lightPurple: '#E5DEFF',
+					gray: '#8E9196',
+					lightGray: '#F1F0FB'
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
