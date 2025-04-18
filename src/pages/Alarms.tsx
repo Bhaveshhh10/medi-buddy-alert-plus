@@ -4,8 +4,9 @@ import { PageLayout } from "@/components/layout/PageLayout";
 import { Medicine } from "@/types/medicine";
 import { formatTime } from "@/utils/formatters";
 import { Switch } from "@/components/ui/switch";
+import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
-import { WhatsappIcon } from "lucide-react";
+import { MessageSquare } from "lucide-react";
 
 type MedicineWithNotification = {
   medicineId: string;
@@ -143,7 +144,7 @@ const Alarms = () => {
                     onClick={() => sendWhatsAppMessage(item)}
                     className="text-green-500 hover:text-green-600 hover:bg-green-50"
                   >
-                    <WhatsappIcon className="h-5 w-5" />
+                    <MessageSquare className="h-5 w-5" />
                   </Button>
                   <Switch 
                     checked={item.alarm.enabled}
