@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageLayout } from "@/components/layout/PageLayout";
@@ -29,6 +28,7 @@ const AddMedicine = () => {
   const [dosage, setDosage] = useState("1 pill");
   const [stock, setStock] = useState(30);
   const [photoUrl, setPhotoUrl] = useState("");
+  const [whatsappNumber, setWhatsappNumber] = useState("");
 
   const daysOfWeek = [
     "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"
@@ -61,6 +61,11 @@ const AddMedicine = () => {
       return;
     }
 
+    if (!whatsappNumber) {
+      toast.error("Please enter your WhatsApp number for notifications");
+      return;
+    }
+
     const alarm: Alarm = {
       id: uuidv4(),
       time,
@@ -68,7 +73,7 @@ const AddMedicine = () => {
     };
 
     if (type === "regular") {
-      alarm.days = days.length > 0 ? days : daysOfWeek; // Default to all days if none selected
+      alarm.days = days.length > 0 ? days : daysOfWeek;
     }
 
     const newMedicine: Medicine = {
@@ -81,6 +86,7 @@ const AddMedicine = () => {
       dosage,
       createdAt: new Date().toISOString(),
       photoUrl,
+      whatsappNumber,
     };
 
     if (type === "course") {
@@ -92,7 +98,6 @@ const AddMedicine = () => {
       newMedicine.endDate = endDate;
     }
 
-    // Save to localStorage
     try {
       const existingMedicines = localStorage.getItem("medicines");
       const medicines = existingMedicines ? JSON.parse(existingMedicines) : [];
@@ -239,6 +244,17 @@ const AddMedicine = () => {
               />
             </div>
           )}
+        </div>
+
+        <div className="space-y-2">
+          <Label htmlFor="whatsapp">WhatsApp Number</Label>
+          <Input
+            id="whatsapp"
+            placeholder="Enter your WhatsApp number (with country code)"
+            value={whatsappNumber}
+            onChange={(e) => setWhatsappNumber(e.target.value)}
+            required
+          />
         </div>
 
         <Button type="submit" className="w-full">Add Medicine</Button>

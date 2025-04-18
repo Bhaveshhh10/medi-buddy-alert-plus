@@ -15,9 +15,10 @@ export interface Medicine {
   type: MedicineType;
   alarms: Alarm[];
   photoUrl?: string;
-  stock: number; // to track if medicine is running low
-  startDate?: string; // for course-based
-  endDate?: string; // for course-based
-  dosage: string; // e.g., "1 pill", "5ml"
+  stock: number;
+  startDate?: string;
+  endDate?: string;
+  dosage: string;
   createdAt: string;
+  whatsappNumber?: string;
 }

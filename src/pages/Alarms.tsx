@@ -1,66 +1,73 @@
 
 import { useState, useEffect } from "react";
 import { PageLayout } from "@/components/layout/PageLayout";
-import { Medicine, Alarm } from "@/types/medicine";
+import { Medicine } from "@/types/medicine";
 import { formatTime } from "@/utils/formatters";
 import { Switch } from "@/components/ui/switch";
 import { toast } from "sonner";
+import { WhatsappIcon } from "lucide-react";
 
-type MedicineWithAlarm = {
+type MedicineWithNotification = {
   medicineId: string;
   medicineName: string;
-  alarm: Alarm;
+  alarm: {
+    id: string;
+    time: string;
+    enabled: boolean;
+    days?: string[];
+  };
   type: Medicine["type"];
   dosage: string;
+  whatsappNumber: string;
 };
 
 const Alarms = () => {
-  const [alarms, setAlarms] = useState<MedicineWithAlarm[]>([]);
+  const [notifications, setNotifications] = useState<MedicineWithNotification[]>([]);
 
   useEffect(() => {
-    loadAlarms();
+    loadNotifications();
   }, []);
 
-  const loadAlarms = () => {
+  const loadNotifications = () => {
     try {
       const savedMedicines = localStorage.getItem("medicines");
       if (savedMedicines) {
         const medicines: Medicine[] = JSON.parse(savedMedicines);
         
-        // Extract all alarms from medicines
-        const extractedAlarms: MedicineWithAlarm[] = [];
+        const extractedNotifications: MedicineWithNotification[] = [];
         
         medicines.forEach(medicine => {
-          medicine.alarms.forEach(alarm => {
-            extractedAlarms.push({
-              medicineId: medicine.id,
-              medicineName: medicine.name,
-              alarm: alarm,
-              type: medicine.type,
-              dosage: medicine.dosage
+          if (medicine.whatsappNumber) {
+            medicine.alarms.forEach(alarm => {
+              extractedNotifications.push({
+                medicineId: medicine.id,
+                medicineName: medicine.name,
+                alarm: alarm,
+                type: medicine.type,
+                dosage: medicine.dosage,
+                whatsappNumber: medicine.whatsappNumber || "",
+              });
             });
-          });
+          }
         });
         
-        // Sort alarms by time
-        extractedAlarms.sort((a, b) => {
+        extractedNotifications.sort((a, b) => {
           return a.alarm.time.localeCompare(b.alarm.time);
         });
         
-        setAlarms(extractedAlarms);
+        setNotifications(extractedNotifications);
       }
     } catch (error) {
-      console.error("Error loading alarms:", error);
+      console.error("Error loading notifications:", error);
     }
   };
 
-  const toggleAlarmStatus = (medicineId: string, alarmId: string, enabled: boolean) => {
+  const toggleNotificationStatus = (medicineId: string, alarmId: string, enabled: boolean) => {
     try {
       const savedMedicines = localStorage.getItem("medicines");
       if (savedMedicines) {
         const medicines: Medicine[] = JSON.parse(savedMedicines);
         
-        // Find the medicine and update the alarm
         const updatedMedicines = medicines.map(medicine => {
           if (medicine.id === medicineId) {
             const updatedAlarms = medicine.alarms.map(alarm => {
@@ -74,26 +81,30 @@ const Alarms = () => {
           return medicine;
         });
         
-        // Save back to localStorage
         localStorage.setItem("medicines", JSON.stringify(updatedMedicines));
         
-        // Update local state
-        setAlarms(alarms.map(item => {
+        setNotifications(notifications.map(item => {
           if (item.medicineId === medicineId && item.alarm.id === alarmId) {
             return { ...item, alarm: { ...item.alarm, enabled } };
           }
           return item;
         }));
         
-        toast.success(`Alarm ${enabled ? 'enabled' : 'disabled'}`);
+        toast.success(`WhatsApp notifications ${enabled ? 'enabled' : 'disabled'}`);
       }
     } catch (error) {
-      console.error("Error updating alarm:", error);
-      toast.error("Failed to update alarm");
+      console.error("Error updating notification:", error);
+      toast.error("Failed to update notification settings");
     }
   };
 
-  const getAlarmSchedule = (item: MedicineWithAlarm) => {
+  const sendWhatsAppMessage = (notification: MedicineWithNotification) => {
+    const message = `Time to take your medicine: ${notification.medicineName} - ${notification.dosage}`;
+    const encodedMessage = encodeURIComponent(message);
+    window.open(`https://wa.me/${notification.whatsappNumber}?text=${encodedMessage}`, '_blank');
+  };
+
+  const getSchedule = (item: MedicineWithNotification) => {
     if (item.type === "one-time") {
       return "One time only";
     } else if (item.type === "regular") {
@@ -106,15 +117,15 @@ const Alarms = () => {
   };
 
   return (
-    <PageLayout title="Medication Alarms">
+    <PageLayout title="Medicine Notifications">
       <div className="space-y-6">
-        {alarms.length === 0 ? (
+        {notifications.length === 0 ? (
           <div className="text-center py-10 bg-gray-50 rounded-lg">
-            <p className="text-gray-500">No alarms set</p>
+            <p className="text-gray-500">No notifications set</p>
           </div>
         ) : (
           <div className="space-y-4">
-            {alarms.map((item) => (
+            {notifications.map((item) => (
               <div 
                 key={`${item.medicineId}-${item.alarm.id}`}
                 className="p-4 bg-white rounded-lg shadow-sm border flex items-center justify-between"
@@ -123,14 +134,24 @@ const Alarms = () => {
                   <div className="text-lg font-medium">{formatTime(item.alarm.time)}</div>
                   <div className="text-base">{item.medicineName}</div>
                   <div className="text-sm text-gray-500">{item.dosage}</div>
-                  <div className="text-xs text-gray-400">{getAlarmSchedule(item)}</div>
+                  <div className="text-xs text-gray-400">{getSchedule(item)}</div>
                 </div>
-                <Switch 
-                  checked={item.alarm.enabled}
-                  onCheckedChange={(checked) => 
-                    toggleAlarmStatus(item.medicineId, item.alarm.id, checked)
-                  }
-                />
+                <div className="flex items-center gap-4">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => sendWhatsAppMessage(item)}
+                    className="text-green-500 hover:text-green-600 hover:bg-green-50"
+                  >
+                    <WhatsappIcon className="h-5 w-5" />
+                  </Button>
+                  <Switch 
+                    checked={item.alarm.enabled}
+                    onCheckedChange={(checked) => 
+                      toggleNotificationStatus(item.medicineId, item.alarm.id, checked)
+                    }
+                  />
+                </div>
               </div>
             ))}
           </div>
