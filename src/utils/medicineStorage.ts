@@ -1,8 +1,8 @@
 
 import { Medicine } from '../types/medicine';
 
-// Key for localStorage
-const MEDICINES_STORAGE_KEY = 'medibuddy-medicines';
+// Key for localStorage - using the same key as in the components
+const MEDICINES_STORAGE_KEY = 'medicines';
 
 // Get all medicines
 export const getAllMedicines = (): Medicine[] => {

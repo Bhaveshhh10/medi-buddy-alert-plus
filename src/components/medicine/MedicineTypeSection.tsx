@@ -1,50 +1,62 @@
 
-import { MedicineType } from "@/types/medicine";
-import { ReactNode } from "react";
-import { cn } from "@/lib/utils";
+import React from "react";
+import { Medicine } from "@/types/medicine";
+import { MedicineCard } from "./MedicineCard";
+import { toast } from "sonner";
 
-interface MedicineTypeSectionProps {
+export interface MedicineTypeSectionProps {
   title: string;
-  icon: ReactNode;
-  type: MedicineType;
-  activeType: MedicineType | null;
-  count: number;
-  onClick: (type: MedicineType) => void;
+  medicines: Medicine[];
+  emptyMessage: string;
 }
 
-export function MedicineTypeSection({
-  title,
-  icon,
-  type,
-  activeType,
-  count,
-  onClick
+export function MedicineTypeSection({ 
+  title, 
+  medicines, 
+  emptyMessage 
 }: MedicineTypeSectionProps) {
-  const isActive = activeType === type;
   
+  const handleDelete = (id: string) => {
+    try {
+      // Get current medicines
+      const storedMedicines = localStorage.getItem("medicines");
+      if (!storedMedicines) return;
+      
+      // Filter out the medicine to delete
+      const medicineList: Medicine[] = JSON.parse(storedMedicines);
+      const updatedMedicines = medicineList.filter(med => med.id !== id);
+      
+      // Save updated list
+      localStorage.setItem("medicines", JSON.stringify(updatedMedicines));
+      
+      // Show success message
+      toast.success("Medicine removed successfully");
+      
+      // Refresh page to show updated list
+      window.location.reload();
+    } catch (error) {
+      console.error("Error deleting medicine:", error);
+      toast.error("Failed to remove medicine");
+    }
+  };
+
   return (
-    <button
-      onClick={() => onClick(type)}
-      className={cn(
-        "flex flex-col items-center p-4 rounded-xl w-full transition-all",
-        isActive 
-          ? "bg-mediBuddy-blue text-white" 
-          : "bg-white text-gray-800 hover:bg-gray-50"
+    <div className="space-y-2">
+      <h3 className="text-lg font-medium">{title}</h3>
+      
+      {medicines.length === 0 ? (
+        <p className="text-gray-500 text-center p-4 bg-gray-50 rounded-lg">{emptyMessage}</p>
+      ) : (
+        <div>
+          {medicines.map(medicine => (
+            <MedicineCard 
+              key={medicine.id} 
+              medicine={medicine} 
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
       )}
-    >
-      <div className={cn(
-        "p-3 rounded-full mb-2",
-        isActive ? "bg-white/20" : "bg-mediBuddy-lightBlue"
-      )}>
-        {icon}
-      </div>
-      <span className="font-medium text-lg">{title}</span>
-      <span className={cn(
-        "text-sm mt-1",
-        isActive ? "text-white/80" : "text-gray-500"
-      )}>
-        {count} {count === 1 ? 'medicine' : 'medicines'}
-      </span>
-    </button>
+    </div>
   );
 }

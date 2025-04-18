@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Medicine } from "@/types/medicine";
 import { Search } from "lucide-react";
 import { MedicineCard } from "@/components/medicine/MedicineCard";
+import { toast } from "sonner";
 
 const SearchMedicine = () => {
   const [searchTerm, setSearchTerm] = useState("");
@@ -37,6 +38,33 @@ const SearchMedicine = () => {
     }
   }, [searchTerm, medicines]);
 
+  const handleDelete = (id: string) => {
+    try {
+      // Get current medicines
+      const storedMedicines = localStorage.getItem("medicines");
+      if (!storedMedicines) return;
+      
+      // Filter out the medicine to delete
+      const medicineList: Medicine[] = JSON.parse(storedMedicines);
+      const updatedMedicines = medicineList.filter(med => med.id !== id);
+      
+      // Save updated list
+      localStorage.setItem("medicines", JSON.stringify(updatedMedicines));
+      
+      // Update local state
+      setMedicines(updatedMedicines);
+      setFilteredMedicines(prevFiltered => 
+        prevFiltered.filter(med => med.id !== id)
+      );
+      
+      // Show success message
+      toast.success("Medicine removed successfully");
+    } catch (error) {
+      console.error("Error deleting medicine:", error);
+      toast.error("Failed to remove medicine");
+    }
+  };
+
   return (
     <PageLayout title="Search Medicines">
       <div className="space-y-6">
@@ -57,7 +85,11 @@ const SearchMedicine = () => {
             <p className="text-center text-gray-500 py-8">No medicines found for "{searchTerm}"</p>
           ) : (
             filteredMedicines.map(medicine => (
-              <MedicineCard key={medicine.id} medicine={medicine} />
+              <MedicineCard 
+                key={medicine.id} 
+                medicine={medicine} 
+                onDelete={handleDelete}
+              />
             ))
           )}
         </div>
